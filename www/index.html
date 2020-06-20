@@ -6,6 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Chat App</title>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="./require.js"></script>
   <script src="./script.js"></script>
   <style>
     body {
@@ -17,7 +18,9 @@
 
     #message-container {
       width: 80%;
+      height: 600px;
       max-width: 1200px;
+      overflow: scroll;
     }
 
     #message-container div {

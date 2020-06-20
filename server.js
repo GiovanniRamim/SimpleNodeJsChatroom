@@ -4,6 +4,7 @@ const server = require('http').createServer(app);
 const io = require("socket.io").listen(server);
 const {Worker} = require('worker_threads');
 const fileStore = require("./api/fileStore");
+const DBAction = require("./www/db/dbServices");
 
 var users = [];
 //Isto é um workaround devido ao fato de não ser possivel passar um socket a uma thread com 
@@ -17,7 +18,8 @@ app.use("/", express.static(__dirname + "/www"));
 app.use("/File", fileStore);
 
 io.sockets.on("connection", (socket) => {
-    
+    var db = new DBAction();
+    db.getLatestMessages(socket);
     var commandWatcher = new Worker(__dirname + "/commandWatcher.js", () => { });
 
     commandWatcher.on("message", (msg) => {
@@ -35,7 +37,7 @@ io.sockets.on("connection", (socket) => {
                     socket:socket,
                 })
                 logUsuariosConectados();
-                socket.emit("newMsg", "você entrou no chat, digite exit() para sair", "Servidor");
+                socket.emit("newMsg", "você entrou no chat, digite commands() para lista de comandos.", "Servidor");
                 return socket.broadcast.emit("newMsg", socket.nickname + " entrou no chat", "Servidor");
 
             case "CHANGE_NICK_SUCCEDDED":
@@ -55,6 +57,8 @@ io.sockets.on("connection", (socket) => {
                 return socket.emit("newMsg", "Nickname alterado com sucesso!", "Servidor");
 
             case "PUBLIC_MESSAGE_SUCCEDDED":
+                console.log("Attempting to store a message in database");
+                db.insertMessage(msg.nickname, msg.message, "");
                 return socket.broadcast.emit("newMsg", msg.message, msg.nickname)
 
             case "PRIVATE_MESSAGE_SUCCEDDED":
